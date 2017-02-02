@@ -25,6 +25,7 @@
                 <li><a href="/stock">Stock</a></li>
                 <li><a href="/suppliers">Suppliers</a></li>
                 <li><a href="/orders">Orders</a></li>
+                <li><a href="/sales">Salesmen</a></li>
             </ul>
         </div><!--/.nav-collapse -->
     </div>
@@ -37,7 +38,7 @@
     </div>
     {{ end }}
 
-    <button type="button" class="btn btn-primary btn-lg" data-toggle="modal" data-target="#createCustomer">
+    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#createCustomer">
         Create Customer
     </button>
 
@@ -57,7 +58,10 @@
                 <td>{{ $value.LastName }}</td>
                 <td>{{ $value.Email }}</td>
                 <td>
-                    <a href="/customer/delete?id={{ $value.ID }}" class="btn btn-danger">Delete</a>
+                   <div class="btn-group">
+                       <a href="/customer/delete?id={{ $value.ID }}" class="btn btn-danger">Delete</a>
+                       <a href="/customer/edit?id={{ $value.ID }}" class="btn btn-default">Edit</a>
+                   </div>
                 </td>
             </tr>
         {{ end }}

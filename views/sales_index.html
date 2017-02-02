@@ -22,10 +22,10 @@
             <ul class="nav navbar-nav">
                 <li><a href="/home">Home</a></li>
                 <li><a href="/customers">Customers</a></li>
-                <li class="active"><a href="/stock">Stock</a></li>
+                <li><a href="/stock">Stock</a></li>
                 <li><a href="/suppliers">Suppliers</a></li>
                 <li><a href="/orders">Orders</a></li>
-                <li><a href="/sales">Salesmen</a></li>
+                <li class="active"><a href="/sales">Salesmen</a></li>
             </ul>
         </div><!--/.nav-collapse -->
     </div>
@@ -38,73 +38,52 @@
     </div>
     {{ end }}
 
-    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#createStock">
-        Create Stock
-    </button>
+    <div class="btn-group" role="group">
+        <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#createSales">Create Sales</button>
+        <a href="/sales/bonus" class="btn btn-info">View Salesmen Bonuses</a>
+    </div>
 
     <table class="table table-striped">
         <thead>
-        <tr>
-            <th>Title</th>
-            <th>Description</th>
-            <th>Price</th>
-            <th>Total Stock</th>
-            <th>Supplier</th>
-            <th></th>
-        </tr>
+            <tr>
+                <th>First Name</th>
+                <th>Last Name</th>
+                <th></th>
+            </tr>
         </thead>
         <tbody>
-        {{ range $value := .Data.Stock }}
-        <tr>
-            <td>{{ $value.Title }}</td>
-            <td>{{ $value.Description }}</td>
-            <td>&pound;{{ $value.Price }}</td>
-            <td>{{ $value.TotalStock }}</td>
-            <td>{{ $value.SupplierName }}</td>
-            <td>
-                <a href="/stock/delete?id={{ $value.ID }}" class="btn btn-danger">Delete</a>
-            </td>
-        </tr>
+        {{ range $value := .Data }}
+            <tr>
+                <td>{{ $value.FirstName }}</td>
+                <td>{{ $value.LastName }}</td>
+                <td>
+                    <div class="btn-group">
+                        <a href="/sales/delete?id={{ $value.ID }}" class="btn btn-danger">Delete</a>
+                        <a href="/sales/edit?id={{ $value.ID }}" class="btn btn-info">Edit</a>
+                    </div>
+                </td>
+            </tr>
         {{ end }}
         </tbody>
     </table>
 </div>
 
-<div class="modal fade" id="createStock" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+<div class="modal fade" id="createSales" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
                 <h4 class="modal-title" id="myModalLabel">Create Customer</h4>
             </div>
-            <form action="/stock/create" method="post">
+            <form action="/sales/create" method="post">
                 <div class="modal-body">
                     <div class="form-group">
-                        <label for="title" class="control-label">Title</label>
-                        <input type="text" class="form-control" id="title" name="title" required>
+                        <label for="firstname" class="control-label">First Name</label>
+                        <input type="text" class="form-control" id="firstname" name="firstname" required>
                     </div>
                     <div class="form-group">
-                        <label for="price" class="control-label">Price</label>
-                        <div class="input-group">
-                            <div class="input-group-addon">&pound;</div>
-                            <input type="number" step="0.01" class="form-control" id="price" name="price" required>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label for="description" class="control-label">Description</label>
-                        <textarea class="form-control" id="description" name="description"></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label for="totalstock" class="control-label">Total Stock</label>
-                        <input type="number" class="form-control" id="totalstock" name="totalstock" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="supplier">Supplier</label>
-                        <select class="form-control" name="supplier" id="supplier">
-                            {{ range $v := .Data.Suppliers }}
-                            <option value="{{ $v.ID }}">{{ $v.Name }}</option>
-                            {{ end }}
-                        </select>
+                        <label for="lastname" class="control-label">Last Name</label>
+                        <input type="text" class="form-control" id="lastname" name="lastname" required>
                     </div>
                 </div>
                 <div class="modal-footer">

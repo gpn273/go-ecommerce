@@ -23,9 +23,9 @@
                 <li><a href="/home">Home</a></li>
                 <li><a href="/customers">Customers</a></li>
                 <li><a href="/stock">Stock</a></li>
-                <li class="active"><a href="/suppliers">Suppliers</a></li>
+                <li><a href="/suppliers">Suppliers</a></li>
                 <li><a href="/orders">Orders</a></li>
-                <li><a href="/sales">Salesmen</a></li>
+                <li class="active"><a href="/sales">Salesmen</a></li>
             </ul>
         </div><!--/.nav-collapse -->
     </div>
@@ -38,22 +38,22 @@
     </div>
     {{ end }}
 
+    <p class="help-block">
+        The below bonuses are for this current month
+    </p>
+
     <table class="table table-striped">
         <thead>
             <tr>
-                <th>Name</th>
-                <th>Contact Number</th>
-                <th></th>
+                <th>Salesmen Name</th>
+                <th>Bonus</th>
             </tr>
         </thead>
         <tbody>
-        {{ range $value := .Data }}
+        {{ range $key, $value := .Data }}
             <tr>
-                <td>{{ $value.Name }}</td>
-                <td>{{ $value.ContactNumber }}</td>
-                <td>
-                    <a href="/supplier/delete?id={{ $value.ID }}" class="btn btn-danger">Delete</a>
-                </td>
+                <td>{{ $key }}</td>
+                <td>&pound;{{ $value }}</td>
             </tr>
         {{ end }}
         </tbody>

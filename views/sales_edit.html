@@ -23,9 +23,9 @@
                 <li><a href="/home">Home</a></li>
                 <li><a href="/customers">Customers</a></li>
                 <li><a href="/stock">Stock</a></li>
-                <li class="active"><a href="/suppliers">Suppliers</a></li>
+                <li><a href="/suppliers">Suppliers</a></li>
                 <li><a href="/orders">Orders</a></li>
-                <li><a href="/sales">Salesmen</a></li>
+                <li class="active"><a href="/sales">Salesmen</a></li>
             </ul>
         </div><!--/.nav-collapse -->
     </div>
@@ -38,26 +38,18 @@
     </div>
     {{ end }}
 
-    <table class="table table-striped">
-        <thead>
-            <tr>
-                <th>Name</th>
-                <th>Contact Number</th>
-                <th></th>
-            </tr>
-        </thead>
-        <tbody>
-        {{ range $value := .Data }}
-            <tr>
-                <td>{{ $value.Name }}</td>
-                <td>{{ $value.ContactNumber }}</td>
-                <td>
-                    <a href="/supplier/delete?id={{ $value.ID }}" class="btn btn-danger">Delete</a>
-                </td>
-            </tr>
-        {{ end }}
-        </tbody>
-    </table>
+    <form action="/sales/edit/update" method="post">
+        <input type="hidden" name="id" value="{{ .Data.ID }}">
+        <div class="form-group">
+            <label for="firstname" class="control-label">First Name</label>
+            <input type="text" class="form-control" id="firstname" name="firstname" value="{{ .Data.FirstName }}" required>
+        </div>
+        <div class="form-group">
+            <label for="lastname" class="control-label">Last Name</label>
+            <input type="text" class="form-control" id="lastname" name="lastname" value="{{ .Data.LastName }}" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Save changes</button>
+    </form>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js" integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8=" crossorigin="anonymous"></script>

@@ -25,6 +25,7 @@
                 <li><a href="/stock">Stock</a></li>
                 <li><a href="/suppliers">Suppliers</a></li>
                 <li class="active"><a href="/orders">Orders</a></li>
+                <li><a href="/sales">Salesmen</a></li>
             </ul>
         </div><!--/.nav-collapse -->
     </div>
@@ -36,6 +37,10 @@
         <strong>Error</strong> {{.Error}}
     </div>
     {{ end }}
+
+    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#createOrder">
+        Create Order
+    </button>
 
     <table class="table table-striped">
         <thead>
@@ -51,7 +56,7 @@
             </tr>
         </thead>
         <tbody>
-        {{ range $value := .Data }}
+        {{ range $value := .Data.Orders }}
             <tr>
                 <td>{{ $value.StockName }}</td>
                 <td>{{ $value.Quantity }}</td>
@@ -60,10 +65,81 @@
                 <td>{{ $value.Address2 }}</td>
                 <td>{{ $value.City }}</td>
                 <td>{{ $value.Postcode }}</td>
+                <td>
+                    <a href="/order/cancel?id={{ $value.ID }}" class="btn btn-danger">Cancel Order</a>
+                </td>
             </tr>
         {{ end }}
         </tbody>
     </table>
+</div>
+
+<div class="modal fade" id="createOrder" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="myModalLabel">Create Order</h4>
+            </div>
+            <form action="/order/create" method="post">
+                <div class="modal-body">
+                    <div class="form-group">
+                        {{ if not .Data.Customers }}
+                            <div class="alert alert-info">
+                                <strong>Info</strong>
+                                Ensure you have customers added before creating orders
+                            </div>
+                        {{ else }}
+                            <label for="customerId" class="control-label">Customer</label>
+                            <select class="form-control" name="customerid" id="customerId">
+                                {{ range $v := .Data.Customers }}
+                                <option value="{{ $v.ID }}">{{ $v.FirstName }} {{ $v.LastName }}</option>
+                                {{ end }}
+                            </select>
+                        {{ end }}
+                    </div>
+                    <div class="form-group">
+                        {{ if not .Data.Stocks }}
+                            <div class="alert alert-info">
+                                <strong>Info</strong>
+                                Ensure you have stocks added before creating orders
+                            </div>
+                        {{ else }}
+                            <label for="stockId" class="control-label">Stock Item</label>
+                            <select class="form-control" name="stockid" id="stockId">
+                                {{ range $v := .Data.Stocks }}
+                                <option value="{{ $v.ID }}">{{ $v.Title }}</option>
+                                {{ end }}
+                            </select>
+                        {{ end }}
+                    </div>
+                    <div class="form-group">
+                        {{ if not .Data.Sales }}
+                            <div class="alert alert-info">
+                                <strong>Info</strong>
+                                Ensure you have salesmen added before creating orders
+                            </div>
+                        {{ else }}
+                            <label for="salesId" class="control-label">Salesmen</label>
+                            <select class="form-control" name="salesid" id="salesId">
+                                {{ range $v := .Data.Sales }}
+                                <option value="{{ $v.ID }}">{{ $v.FirstName }} {{ $v.LastName }}</option>
+                                {{ end }}
+                            </select>
+                        {{ end }}
+                    </div>
+                    <div class="form-group">
+                        <label for="quantity" class="control-label">Quantity</label>
+                        <input id="quantity" class="form-control" name="quantity" type="number" step="1" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Save changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js" integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8=" crossorigin="anonymous"></script>

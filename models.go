@@ -4,17 +4,12 @@ import (
 	"time"
 	"database/sql"
 	"fmt"
-	"crypto/sha1"
-	"io"
 )
 
-type User struct {
+type Sales struct {
 	ID int `db:"id"`
 	FirstName string `db:"firstname"`
 	LastName string `db:"lastname"`
-	Email string `db:"email"`
-	Password string `db:"password"`
-	Active bool `db:"active"`
 }
 
 type Customer struct {
@@ -29,19 +24,6 @@ type Supplier struct {
 	ID int `db:"id"`
 	Name string `db:"name"`
 	ContactNumber string `db:"main_contact_number"`
-	TotalWarehouses int
-}
-
-type SupplierWarehouses struct {
-	ID int `db:"id"`
-	SupplierName string
-	CountryCodeID int `db:"country_code_id"`
-	SupplierID int `db:"supplier_id"`
-	Address1 string `db:"address_line1"`
-	Address2 string `db:"address_line2"`
-	City string `db:"city"`
-	PostCode string `db:"postcode"`
-	ContactNumber string `db:"contact_number"`
 }
 
 type CustomerAddress struct {
@@ -79,6 +61,12 @@ type Order struct {
 	CustomerName string
 }
 
+type SalesBonus struct {
+	ID int `db:"id"`
+	SalesName string `db:"sales_name"`
+	Bonus float64 `db:"bonus"`
+}
+
 func CreateCustomer(customer *Customer) (sql.Result, bool) {
 	db := DatabaseContext()
 
@@ -96,6 +84,42 @@ func CreateCustomer(customer *Customer) (sql.Result, bool) {
 	}
 
 	return res, true
+}
+
+func UpdateCustomer(customer *Customer, customerId string) bool {
+	db := DatabaseContext()
+
+	query := fmt.Sprintf("UPDATE customers SET firstname='%s',lastname='%s',email='%s',contact_number='%s' WHERE id = %s", customer.FirstName, customer.LastName, customer.Email, customer.ContactNumber, customerId)
+	_, err := db.Query(query)
+	if err != nil {
+		fmt.Println(err)
+		return false
+	}
+
+	return true
+}
+
+func GetSalesBonusResults() ([]SalesBonus, bool) {
+	db := DatabaseContext()
+
+	rows, err := db.Query("CALL `baltic`.`GetSalesBonuses`()")
+	if err != nil {
+		return nil, false
+	}
+
+	ents := []SalesBonus{}
+	for rows.Next() {
+		var r SalesBonus
+		err = rows.Scan(&r.ID, &r.SalesName, &r.Bonus)
+		if err != nil {
+			fmt.Printf("Scan: %v", err)
+			return nil, false
+		}
+
+		ents = append(ents, r)
+	}
+
+	return ents, true
 }
 
 func CreateCustomerAddress(address *CustomerAddress) (sql.Result, bool) {
@@ -116,6 +140,19 @@ func CreateCustomerAddress(address *CustomerAddress) (sql.Result, bool) {
 	return res, true
 }
 
+func UpdateCustomerAddress(address *CustomerAddress, customerId string) bool {
+	db := DatabaseContext()
+
+	query := fmt.Sprintf("UPDATE customer_addresses SET line1='%s',line2='%s',city='%s',postcode='%s' WHERE customer_id = %s", address.Address1, address.Address2, address.City, address.Postcode, customerId)
+	_, err := db.Query(query)
+	if err != nil {
+		fmt.Println(err)
+		return false
+	}
+
+	return true
+}
+
 func DeleteCustomer(id int) bool {
 	db := DatabaseContext()
 
@@ -131,11 +168,6 @@ func DeleteCustomer(id int) bool {
 func DeleteSupplier(id int) bool {
 	db := DatabaseContext()
 
-	success := DeleteSupplierWarehouseBySupplierID(id)
-	if !success {
-		return false
-	}
-
 	query := fmt.Sprintf("DELETE FROM supplier WHERE id = %d", id)
 	_, err := db.Query(query)
 	if err != nil {
@@ -145,42 +177,15 @@ func DeleteSupplier(id int) bool {
 	return true
 }
 
-func DeleteSupplierWarehouse(id int) bool {
+func CreateSales(sales *Sales) (sql.Result, bool) {
 	db := DatabaseContext()
 
-	query := fmt.Sprintf("DELETE FROM supplier_warehouses WHERE id = %d", id)
-	_, err := db.Query(query)
-	if err != nil {
-		return false
-	}
-
-	return true
-}
-
-func DeleteSupplierWarehouseBySupplierID(id int) bool {
-	db := DatabaseContext()
-
-	query := fmt.Sprintf("DELETE FROM supplier_warehouses WHERE supplier_id = %d", id)
-	_, err := db.Query(query)
-	if err != nil {
-		return false
-	}
-
-	return true
-}
-
-func CreateUser(user *User) (sql.Result, bool) {
-	db := DatabaseContext()
-
-	stmt, err := db.Prepare("INSERT INTO users SET firstname=?,lastname=?,email=?,password=?,created_at=?,active=?")
+	stmt, err := db.Prepare("INSERT INTO sales SET firstname=?,lastname=?")
 	if err != nil {
 		return nil, false
 	}
 
-	h := sha1.New()
-	io.WriteString(h, user.Password)
-
-	res, err := stmt.Exec(user.FirstName, user.LastName, user.Email, h.Sum(nil), time.Now(), user.Active)
+	res, err := stmt.Exec(sales.FirstName, sales.LastName)
 	if err != nil {
 		return nil, false
 	}
@@ -188,18 +193,30 @@ func CreateUser(user *User) (sql.Result, bool) {
 	return res, true
 }
 
-func GetAllUsers() ([]User, bool) {
+func DeleteSales(salesId int) bool {
 	db := DatabaseContext()
 
-	rows, err := db.Query("SELECT id, firstname, lastname, email, active FROM users")
+	custQuery := fmt.Sprintf("DELETE FROM sales WHERE id = %d", salesId)
+	_, err := db.Query(custQuery)
+	if err != nil {
+		return false
+	}
+
+	return true
+}
+
+func GetAllSales() ([]Sales, bool) {
+	db := DatabaseContext()
+
+	rows, err := db.Query("SELECT id, firstname, lastname FROM sales")
 	if err != nil {
 		return nil, false
 	}
 
-	ents := []User{}
+	ents := []Sales{}
 	for rows.Next() {
-		var r User
-		err = rows.Scan(&r.ID, &r.FirstName, &r.LastName, &r.Email, &r.Active)
+		var r Sales
+		err = rows.Scan(&r.ID, &r.FirstName, &r.LastName)
 		if err != nil {
 			fmt.Printf("Scan: %v", err)
 			return nil, false
@@ -237,7 +254,7 @@ func GetAllCustomers() ([]Customer, bool) {
 func GetAllSuppliers() ([]Supplier, bool) {
 	db := DatabaseContext()
 
-	rows, err := db.Query("SELECT s.id, s.name, s.main_contact_number, (SELECT count(*) FROM baltic.supplier_warehouses as sw WHERE sw.supplier_id = s.id) as total_warehouses FROM baltic.supplier AS s")
+	rows, err := db.Query("SELECT s.id, s.name, s.main_contact_number FROM baltic.supplier AS s")
 	if err != nil {
 		return nil, false
 	}
@@ -245,7 +262,7 @@ func GetAllSuppliers() ([]Supplier, bool) {
 	ents := []Supplier{}
 	for rows.Next() {
 		var r Supplier
-		err = rows.Scan(&r.ID, &r.Name, &r.ContactNumber, &r.TotalWarehouses)
+		err = rows.Scan(&r.ID, &r.Name, &r.ContactNumber)
 		if err != nil {
 			fmt.Printf("Scan: %v", err)
 			return nil, false
@@ -255,53 +272,15 @@ func GetAllSuppliers() ([]Supplier, bool) {
 	}
 
 	return ents, true
-}
-
-func GetAllSuppliersWarehouses(supplierId int) ([]SupplierWarehouses, bool) {
-	db := DatabaseContext()
-	query := fmt.Sprintf("SELECT sw.id, sw.address_line1, sw.address_line2, sw.city, sw.postcode, sw.contact_number FROM baltic.supplier_warehouses as sw WHERE supplier_id = %d", supplierId)
-	rows, err := db.Query(query)
-	if err != nil {
-		return nil, false
-	}
-
-	ents := []SupplierWarehouses{}
-	for rows.Next() {
-		var r SupplierWarehouses
-		err = rows.Scan(&r.ID, &r.Address1, &r.Address2, &r.City, &r.PostCode, &r.ContactNumber)
-		if err != nil {
-			fmt.Printf("Scan: %v", err)
-			return nil, false
-		}
-
-		ents = append(ents, r)
-	}
-
-	return ents, true
-}
-
-func GetUserByEmail(email string) (User, bool) {
-	db := DatabaseContext()
-
-	row := db.QueryRow("SELECT id, firstname, lastname, email, password, active FROM users WHERE email = ?", email)
-
-	var r User
-	err := row.Scan(&r.ID, &r.FirstName, &r.LastName, &r.Email, &r.Password, &r.Active)
-	if err != nil {
-		fmt.Printf("Scan: %v", err)
-		return User{}, false
-	}
-
-	return r, true
 }
 
 func GetCustomerByID (customerId int) (Customer, bool) {
 	db := DatabaseContext()
 
-	row := db.QueryRow("SELECT id, firstname, lastname, email FROM customers WHERE id = ?", customerId)
+	row := db.QueryRow("SELECT id, firstname, lastname, email, contact_number FROM customers WHERE id = ?", customerId)
 
 	var r Customer
-	err := row.Scan(&r.ID, &r.FirstName, &r.LastName, &r.Email)
+	err := row.Scan(&r.ID, &r.FirstName, &r.LastName, &r.Email, &r.ContactNumber)
 	if err != nil {
 		fmt.Printf("Scan: %v", err)
 		return Customer{}, false
@@ -310,10 +289,38 @@ func GetCustomerByID (customerId int) (Customer, bool) {
 	return r, true
 }
 
+func GetSalesByID (salesId int) (Sales, bool) {
+	db := DatabaseContext()
+
+	row := db.QueryRow("SELECT id, firstname, lastname FROM sales WHERE id = ?", salesId)
+
+	var r Sales
+	err := row.Scan(&r.ID, &r.FirstName, &r.LastName)
+	if err != nil {
+		fmt.Printf("Scan: %v", err)
+		return Sales{}, false
+	}
+
+	return r, true
+}
+
+func UpdateSales(sales *Sales, salesId string) bool {
+	db := DatabaseContext()
+
+	query := fmt.Sprintf("UPDATE sales SET firstname='%s',lastname='%s' WHERE id = %s", sales.FirstName, sales.LastName, salesId)
+	_, err := db.Query(query)
+	if err != nil {
+		fmt.Println(err)
+		return false
+	}
+
+	return true
+}
+
 func GetFirstCustomerAddressByID(customerId int) (CustomerAddress, bool) {
 	db := DatabaseContext()
 
-	row := db.QueryRow("SELECT id,line1,line2,city,postcode FROM customers WHERE customer_id = ?", customerId)
+	row := db.QueryRow("SELECT id,line1,line2,city,postcode FROM customer_addresses WHERE customer_id = ?", customerId)
 
 	var r CustomerAddress
 	err := row.Scan(&r.ID,&r.Address1, &r.Address2,&r.City,&r.Postcode)
@@ -366,6 +373,21 @@ func GetStockByID(stockId int) (Stock, bool) {
 	if err != nil {
 		fmt.Printf("Scan: %v", err)
 		return Stock{}, false
+	}
+
+	return r, true
+}
+
+func GetOrderByID(orderId int) (Order, bool) {
+	db := DatabaseContext()
+
+	row := db.QueryRow("SELECT id, quantity, stock_id, status_id, (SELECT title FROM stock WHERE id = o.stock_id) as stock_name, (SELECT CONCAT(c.firstname, ' ', c.lastname) FROM customers as c WHERE id = o.customer_id) as customer_name,address_line1, address_line2, address_city, address_postcode FROM orders as o WHERE o.id = ?", orderId)
+
+	var r Order
+	err := row.Scan(&r.ID, &r.Quantity, &r.StockID, &r.StatusID, &r.StockName, &r.CustomerName, &r.Address1, &r.Address2, &r.City, &r.Postcode)
+	if err != nil {
+		fmt.Printf("Scan: %v", err)
+		return Order{}, false
 	}
 
 	return r, true
@@ -445,7 +467,7 @@ func GetAllOrders() ([]Order, bool) {
 	return ents, true
 }
 
-func CreateOrder(stockId, quantity, customerId int) (bool, string) {
+func CreateOrder(stockId, quantity, customerId, salesId int) (bool, string) {
 	stockItem, success := GetStockByID(stockId)
 	if !success {
 		return false, "Failed to get stock record"
@@ -462,12 +484,12 @@ func CreateOrder(stockId, quantity, customerId int) (bool, string) {
 
 	db := DatabaseContext()
 
-	stmt, err := db.Prepare("INSERT INTO orders SET stock_id=?,customer_id=?,quantity=?,address_line1=?,address_line2=?,city=?,postcode=?")
+	stmt, err := db.Prepare("INSERT INTO orders SET stock_id=?,customer_id=?,sales_id=?,quantity=?,address_line1=?,address_line2=?,address_city=?,address_postcode=?")
 	if err != nil {
 		return false, "There was an issue preparing the query to insert into the database"
 	}
 
-	res, err := stmt.Exec(stockId, customerId, quantity, customerAddr.Address1, customerAddr.Address2, customerAddr.City, customerAddr.Postcode)
+	res, err := stmt.Exec(stockId, customerId, salesId, quantity, customerAddr.Address1, customerAddr.Address2, customerAddr.City, customerAddr.Postcode)
 	if err != nil {
 		fmt.Println(err)
 		return false, "Failed to create order"
@@ -482,6 +504,34 @@ func CreateOrder(stockId, quantity, customerId int) (bool, string) {
 	updated := UpdateStockItemQuantity(stockId, stockLeft)
 	if !updated {
 		return false, "Successfully created record, however, failed to update total stock left for stock item."
+	}
+
+	return true, ""
+}
+
+func CancelOrder(orderId int) (bool, string) {
+	order, success := GetOrderByID(orderId)
+	if !success {
+		return false, "Unable to find order"
+	}
+
+	stockItem, success := GetStockByID(order.StockID)
+	if !success {
+		return false, "Unabe to get stock information"
+	}
+
+	db := DatabaseContext()
+
+	query := fmt.Sprintf("DELETE FROM orders WHERE id = %d", orderId)
+	_, err := db.Query(query)
+	if err != nil {
+		return false, "Failed to cancel order"
+	}
+
+	newQuantity := stockItem.TotalStock + order.Quantity
+	updated := UpdateStockItemQuantity(stockItem.ID, newQuantity)
+	if !updated {
+		return false, "Failed to update stock"
 	}
 
 	return true, ""

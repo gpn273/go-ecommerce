@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{.Title}}</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha256-916EbMg70RQy9LHiGkXzG8hSg9EdNy97GazNG/aiY1w=" crossorigin="anonymous" />
+</head>
+<body>
+
+<nav class="navbar navbar-inverse">
+    <div class="container">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="#">Baltic Sports Services</a>
+        </div>
+        <div id="navbar" class="collapse navbar-collapse">
+            <ul class="nav navbar-nav">
+                <li><a href="/home">Home</a></li>
+                <li class="active"><a href="/customers">Customers</a></li>
+                <li><a href="/stock">Stock</a></li>
+                <li><a href="/suppliers">Suppliers</a></li>
+                <li><a href="/orders">Orders</a></li>
+                <li><a href="/sales">Salesmen</a></li>
+            </ul>
+        </div><!--/.nav-collapse -->
+    </div>
+</nav>
+
+<div class="container">
+    {{ if .Error }}
+    <div class="alert alert-danger">
+        <strong>Error</strong> {{.Error}}
+    </div>
+    {{ end }}
+
+    <form action="/customer/edit/update" method="post">
+        <input type="hidden" name="id" value="{{ .Data.Customer.ID }}">
+        <div class="modal-body">
+            <div class="form-group">
+                <label for="firstname" class="control-label">First Name</label>
+                <input type="text" class="form-control" id="firstname" name="firstname" value="{{ .Data.Customer.FirstName }}" required>
+            </div>
+            <div class="form-group">
+                <label for="lastname" class="control-label">Last Name</label>
+                <input type="text" class="form-control" id="lastname" name="lastname" value="{{ .Data.Customer.LastName }}" required>
+            </div>
+            <div class="form-group">
+                <label for="email" class="control-label">Email Address</label>
+                <input type="email" class="form-control" id="email" name="email" value="{{ .Data.Customer.Email }}" required>
+            </div>
+            <div class="form-group">
+                <label for="contactnumber" class="control-label">Contact Number</label>
+                <input type="tel" class="form-control" id="contactnumber" name="contactnumber" value="{{ .Data.Customer.ContactNumber }}" required>
+            </div>
+            <hr />
+            <div class="form-group">
+                <label for="address1" class="control-label">Address Line 1</label>
+                <input type="text" class="form-control" id="address1" name="address1" value="{{ .Data.Address.Address1 }}" required>
+            </div>
+            <div class="form-group">
+                <label for="address2" class="control-label">Address Line 2</label>
+                <input type="text" class="form-control" id="address2" name="address2" value="{{ .Data.Address.Address2 }}" required>
+            </div>
+            <div class="form-group">
+                <label for="city" class="control-label">City</label>
+                <input type="text" class="form-control" id="city" name="city" value="{{ .Data.Address.City }}" required>
+            </div>
+            <div class="form-group">
+                <label for="postcode" class="control-label">Postcode</label>
+                <input type="text" class="form-control" id="postcode" name="postcode" value="{{ .Data.Address.Postcode }}" required>
+            </div>
+        </div>
+        <button type="submit" class="btn btn-primary">Save changes</button>
+    </form>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js" integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8=" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha256-U5ZEeKfGNOja007MMD3YBI0A3OSZOQbeG6z2f2Y0hu8=" crossorigin="anonymous"></script>
+</body>
+</html>
