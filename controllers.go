@@ -139,7 +139,16 @@ func GetSupplierDelete(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
-	DeleteSupplier(cusId)
+	success := DeleteSupplier(cusId)
+	if !success {
+		p := LoadView("home")
+		p.Error = `There was an issue removing the supplier, this maybe because
+		there is pre-existing stock items which exist in the system which relate to this supplier`
+
+		p.Render(w, nil)
+		return
+	}
+
 	http.Redirect(w, r, "/suppliers", 301)
 }
 
@@ -158,14 +167,20 @@ func GetStockIndex(w http.ResponseWriter, r *http.Request) {
 	viewModel := &StockViewModel{}
 	stock, success := GetAllStock(supplierId)
 	if !success {
-		panic("There was an issue gathering stock information")
+		p := LoadView("stock_index")
+		p.Error = "There was an issue gathering stock information"
+		p.Render(w, nil)
+		return
 	}
 
 	viewModel.Stock = stock
 
 	suppliers, success := GetAllSuppliers()
 	if !success {
-		panic("There was na issue gathering supplier information")
+		p := LoadView("stock_index")
+		p.Error = "There was an issue gathering supplier information"
+		p.Render(w, nil)
+		return
 	}
 
 	viewModel.Suppliers = suppliers
@@ -226,7 +241,7 @@ func GetStockDelete(w http.ResponseWriter, r *http.Request) {
 	success := DeleteStock(stockId)
 	if !success {
 		p := LoadView("stock_index")
-		p.Error = "There was error deleting the stock record"
+		p.Error = "There was error deleting the stock record, this might because this stock item could of been used for orders in the past"
 		p.Render(w, nil)
 		return
 	}
@@ -292,7 +307,7 @@ func PostOrderCreate(w http.ResponseWriter, r *http.Request) {
 	quantity, err := strconv.Atoi(r.PostFormValue("quantity"))
 	if err != nil {
 		p := LoadView("order_index")
-		p.Error = "Unable to gather quanity of item"
+		p.Error = "Ensure you have entered a quantity before submitting"
 		p.Render(w, nil)
 		return
 	}
@@ -300,7 +315,7 @@ func PostOrderCreate(w http.ResponseWriter, r *http.Request) {
 	customerId, err := strconv.Atoi(r.PostFormValue("customerid"))
 	if err != nil {
 		p := LoadView("order_index")
-		p.Error = "Unable to gather customer ID"
+		p.Error = "Ensure you have selected a customer before submitting"
 		p.Render(w, nil)
 		return
 	}
@@ -308,7 +323,7 @@ func PostOrderCreate(w http.ResponseWriter, r *http.Request) {
 	salesId, err := strconv.Atoi(r.PostFormValue("salesid"))
 	if err != nil {
 		p := LoadView("home")
-		p.Error = "Unable to gather customer ID"
+		p.Error = "Ensure you have selected a salesmen before submitting"
 		p.Render(w, nil)
 		return
 	}
@@ -408,7 +423,7 @@ func GetSalesDelete(w http.ResponseWriter, r *http.Request) {
 	success := DeleteSales(salesId)
 	if !success {
 		p := LoadView("home")
-		p.Error = "Failed to delete salesmen"
+		p.Error = "Failed to delete salesmen, this is becuase orders are tied to this system."
 		p.Render(w, nil)
 		return
 	}
@@ -551,4 +566,115 @@ func PostSalesEdit(w http.ResponseWriter, r *http.Request) {
 	}
 
 	http.Redirect(w, r, "/sales", 301)
+}
+
+func PostSupplierCreate(w http.ResponseWriter, r *http.Request) {
+	r.ParseForm()
+
+	supplier := &Supplier{
+		Name: r.PostFormValue("name"),
+		ContactNumber: r.PostFormValue("contactnumber"),
+	}
+
+	_, success := CreateSupplier(supplier)
+	if !success {
+		p := LoadView("home")
+		p.Error = "Failed to create supplier, ensure all fields are filled out correctly"
+		p.Render(w, nil)
+		return
+	}
+
+	http.Redirect(w, r, "/suppliers", 301)
+}
+
+func GetSupplierEdit(w http.ResponseWriter, r *http.Request) {
+	id := r.URL.Query().Get("id")
+	supplierId, err := strconv.Atoi(id)
+	if err != nil {
+		p := LoadView("home")
+		p.Error = "Unable to find supplier by given ID"
+		p.Render(w, nil)
+		return
+	}
+
+	supplier, success := GetSupplierByID(supplierId)
+	if !success {
+		p := LoadView("home")
+		p.Error = "Failed to gather supplier from database"
+		p.Render(w, nil)
+		return
+	}
+
+	p := LoadView("supplier_edit")
+	p.Render(w, supplier)
+}
+
+func PostSupplierEdit(w http.ResponseWriter, r *http.Request) {
+	r.ParseForm()
+
+	supplier := &Supplier{
+		Name: r.PostFormValue("name"),
+		ContactNumber: r.PostFormValue("contactnumber"),
+	}
+
+	success := UpdateSupplier(supplier, r.PostFormValue("id"))
+	if !success {
+		p := LoadView("home")
+		p.Error = "Failed to update supplier, ensure all fields are filled out correctly"
+		p.Render(w, nil)
+		return
+	}
+
+	http.Redirect(w, r, "/suppliers", 301)
+}
+
+func GetStockEdit(w http.ResponseWriter, r *http.Request) {
+	id := r.URL.Query().Get("id")
+	stockId, err := strconv.Atoi(id)
+	if err != nil {
+		p := LoadView("home")
+		p.Error = "Unable to find stock by given ID"
+		p.Render(w, nil)
+		return
+	}
+
+	stock, success := GetStockByID(stockId)
+	if !success {
+		p := LoadView("home")
+		p.Error = "Failed to gather stock from database"
+		p.Render(w, nil)
+		return
+	}
+
+	p := LoadView("stock_edit")
+	p.Render(w, stock)
+}
+
+func PostStockEdit(w http.ResponseWriter, r *http.Request) {
+	r.ParseForm()
+
+	stock := &Stock{}
+	stock.Title = r.PostFormValue("title")
+	stock.Description = r.PostFormValue("description")
+	stock.Price = r.PostFormValue("price")
+
+	totalStock, err := strconv.Atoi(r.PostFormValue("totalstock"))
+	if err != nil {
+		p := LoadView("stock_index")
+		p.Error = "Please add total stock value"
+		p.Render(w, nil)
+		return
+	}
+
+	stock.TotalStock = totalStock
+	stock.UpdatedAt = time.Now()
+
+	created := UpdateStock(stock, r.PostFormValue("id"))
+	if !created {
+		p := LoadView("stock_index")
+		p.Error = "There was an issue updating the stock, please ensure you have filled out all fields"
+		p.Render(w, nil)
+	}
+
+	http.Redirect(w, r, "/stock", 301)
 }

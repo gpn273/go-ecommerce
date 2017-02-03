@@ -20,12 +20,12 @@
         </div>
         <div id="navbar" class="collapse navbar-collapse">
             <ul class="nav navbar-nav">
-                <li class="active"><a href="/home">Home</a></li>
+                <li><a href="/home">Home</a></li>
                 <li><a href="/customers">Customers</a></li>
                 <li><a href="/stock">Stock</a></li>
                 <li><a href="/suppliers">Suppliers</a></li>
                 <li><a href="/orders">Orders</a></li>
-                <li><a href="/sales">Salesmen</a></li>
+                <li class="active"><a href="/sales">Salesmen</a></li>
             </ul>
         </div><!--/.nav-collapse -->
     </div>
@@ -38,7 +38,29 @@
     </div>
     {{ end }}
 
-    <h1>Welcome to the Baltic Sports Services Order System</h1>
+    <form action="/stock/edit/update" method="post">
+        <input type="hidden" name="id" value="{{ .Data.ID }}">
+        <div class="form-group">
+            <label for="title" class="control-label">Title</label>
+            <input type="text" class="form-control" id="title" name="title" value="{{ .Data.Title }}" required>
+        </div>
+        <div class="form-group">
+            <label for="price" class="control-label">Price</label>
+            <div class="input-group">
+                <div class="input-group-addon">&pound;</div>
+                <input type="number" step="0.01" class="form-control" id="price" name="price" value="{{ .Data.Price }}" required>
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="description" class="control-label">Description</label>
+            <textarea class="form-control" id="description" name="description">{{ .Data.Description }}</textarea>
+        </div>
+        <div class="form-group">
+            <label for="totalstock" class="control-label">Total Stock</label>
+            <input type="number" class="form-control" id="totalstock" name="totalstock" value="{{ .Data.TotalStock }}" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Save changes</button>
+    </form>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js" integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8=" crossorigin="anonymous"></script>

@@ -62,7 +62,10 @@
             <td>{{ $value.TotalStock }}</td>
             <td>{{ $value.SupplierName }}</td>
             <td>
-                <a href="/stock/delete?id={{ $value.ID }}" class="btn btn-danger">Delete</a>
+                <div class="btn-group">
+                    <a href="/stock/delete?id={{ $value.ID }}" class="btn btn-danger">Delete</a>
+                    <a href="/stock/edit?id={{ $value.ID }}" class="btn btn-info">Edit</a>
+                </div>
             </td>
         </tr>
         {{ end }}

@@ -102,7 +102,17 @@ func UpdateCustomer(customer *Customer, customerId string) bool {
 func GetSalesBonusResults() ([]SalesBonus, bool) {
 	db := DatabaseContext()
 
-	rows, err := db.Query("CALL `baltic`.`GetSalesBonuses`()")
+	rows, err := db.Query(`SELECT
+	s.id,
+		CONCAT(s.firstname, ' ', s.lastname) AS sales_name,
+		ROUND((st.price / 100 * 10), 2) as bonus
+	FROM
+	sales AS s
+	LEFT JOIN
+	orders AS o ON s.id = o.sales_id
+	INNER JOIN
+	stock as st ON st.id = o.stock_id
+	WHERE YEAR(CURDATE()) = YEAR(o.order_placed) AND MONTH(CURDATE()) = MONTH(o.order_placed)`)
 	if err != nil {
 		return nil, false
 	}
@@ -254,7 +264,7 @@ func GetAllCustomers() ([]Customer, bool) {
 func GetAllSuppliers() ([]Supplier, bool) {
 	db := DatabaseContext()
 
-	rows, err := db.Query("SELECT s.id, s.name, s.main_contact_number FROM baltic.supplier AS s")
+	rows, err := db.Query("SELECT s.id, s.name, s.main_contact_number FROM supplier AS s")
 	if err != nil {
 		return nil, false
 	}
@@ -284,6 +294,21 @@ func GetCustomerByID (customerId int) (Customer, bool) {
 	if err != nil {
 		fmt.Printf("Scan: %v", err)
 		return Customer{}, false
+	}
+
+	return r, true
+}
+
+func GetSupplierByID (supplierId int) (Supplier, bool) {
+	db := DatabaseContext()
+
+	row := db.QueryRow("SELECT id, name, main_contact_number FROM supplier WHERE id = ?", supplierId)
+
+	var r Supplier
+	err := row.Scan(&r.ID, &r.Name, &r.ContactNumber)
+	if err != nil {
+		fmt.Printf("Scan: %v", err)
+		return Supplier{}, false
 	}
 
 	return r, true
@@ -535,4 +560,46 @@ func CancelOrder(orderId int) (bool, string) {
 	}
 
 	return true, ""
+}
+
+func CreateSupplier(supplier *Supplier) (sql.Result, bool) {
+	db := DatabaseContext()
+
+	stmt, err := db.Prepare("INSERT INTO supplier SET name=?,main_contact_number=?")
+	if err != nil {
+		return nil, false
+	}
+
+	res, err := stmt.Exec(supplier.Name, supplier.ContactNumber)
+	if err != nil {
+		return nil, false
+	}
+
+	return res, true
+}
+
+func UpdateSupplier(supplier *Supplier, supplierId string) bool {
+	db := DatabaseContext()
+
+	query := fmt.Sprintf("UPDATE supplier SET name='%s',main_contact_number='%s' WHERE id = %s", supplier.Name, supplier.ContactNumber, supplierId)
+	_, err := db.Query(query)
+	if err != nil {
+		fmt.Println(err)
+		return false
+	}
+
+	return true
+}
+
+func UpdateStock(stock *Stock, stockId string) bool {
+	db := DatabaseContext()
+
+	query := fmt.Sprintf("UPDATE stock SET title='%s',description='%s',price='%s',total_stock=%d WHERE id = %s", stock.Title, stock.Description, stock.Price, stock.TotalStock, stockId)
+	_, err := db.Query(query)
+	if err != nil {
+		fmt.Println(err)
+		return false
+	}
+
+	return true
 }
